@@ -11,3 +11,7 @@ git add .
 git commit -m "changes commit for ####"
 git branch -M main
 git push -u origin main
+
+
+#Run app
+npm run dev
