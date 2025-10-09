@@ -1,10 +1,12 @@
 import Link from "next/link";
 
-import HomeFilter from "@/components/filters/HomeFilter";
+import HomeFilter from "@/components/Filters/HomeFilter";
 import LocalSearch from "@/components/search/LocalSearch";
 import { Button } from "@/components/ui/button";
 import ROUTES from "@/constants/routes";
 import QuestionCard from "@/components/cards/QuestionCard";
+import handleError from "@/lib/handlers/error";
+import { NotFoundError, ValidationError } from "@/lib/http-errors";
 
 const questions = [
   {
