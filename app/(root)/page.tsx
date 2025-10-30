@@ -8,6 +8,7 @@ import QuestionCard from "@/components/cards/QuestionCard";
 import handleError from "@/lib/handlers/error";
 import { NotFoundError, ValidationError } from "@/lib/http-errors";
 import dbConnect from "@/lib/mongoose";
+import { api } from "@/lib/api";
 
 const questions = [
   {
@@ -52,10 +53,7 @@ const questions = [
 
 const test = async () => {
   try {
-    throw new ValidationError({
-      title: ["Required"],
-      tags: ['"JavaScript" is not a valid tag.'],
-    });
+    return await api.users.getAll();
   } catch (error) {
     return handleError(error);
   }
@@ -66,7 +64,9 @@ interface SearchParams {
 }
 
 const Home = async ({ searchParams }: SearchParams) => {
-  await test();
+  const users = await test();
+  console.log("Users:", users);
+
   const { query = "", filter = "" } = await searchParams;
 
   const filteredQuestions = questions.filter((question) => {
