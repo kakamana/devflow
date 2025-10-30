@@ -83,3 +83,28 @@ export const UserSchema = z.object({
     .optional(),
   reputation: z.number().optional(),
 });
+
+export const AccountSchema = z.object({
+  userId: z.string().min(1, { message: "User ID is required." }),
+  name: z
+    .string()
+    .min(1, { message: "Name is required." })
+    .max(100, { message: "Name cannot exceed 100 characters." }),
+  image: z
+    .string()
+    .url({ message: "Please provide a valid image URL." })
+    .optional(),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters long." })
+    .max(100, { message: "Password cannot exceed 100 characters." })
+    .optional(),
+  provider: z
+    .string()
+    .min(1, { message: "Provider is required." })
+    .max(50, { message: "Provider cannot exceed 50 characters." }),
+  providerAccountId: z
+    .string()
+    .min(1, { message: "Provider account ID is required." })
+    .max(100, { message: "Provider account ID cannot exceed 100 characters." }),
+});
