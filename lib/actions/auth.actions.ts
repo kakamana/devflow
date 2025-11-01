@@ -30,13 +30,13 @@ export async function signUpWithCredentials(
     const existingUser = await User.findOne({ email }).session(session);
 
     if (existingUser) {
-      throw new Error("User already exisits");
+      throw new Error("User already exists");
     }
 
     const existingUsername = await User.findOne({ username }).session(session);
 
     if (existingUsername) {
-      throw new Error("Username already taken");
+      throw new Error("Username already exists");
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -86,27 +86,21 @@ export async function signInWithCredentials(
   try {
     const existingUser = await User.findOne({ email });
 
-    if (!existingUser) {
-      throw new NotFoundError("User not found");
-    }
+    if (!existingUser) throw new NotFoundError("User");
 
     const existingAccount = await Account.findOne({
       provider: "credentials",
       providerAccountId: email,
     });
 
-    if (!existingAccount) {
-      throw new NotFoundError("Account not found");
-    }
+    if (!existingAccount) throw new NotFoundError("Account");
 
-    const isPasswordValid = await bcrypt.compare(
+    const passwordMatch = await bcrypt.compare(
       password,
       existingAccount.password
     );
 
-    if (!isPasswordValid) {
-      throw new Error("Invalid credentials");
-    }
+    if (!passwordMatch) throw new Error("Password does not match");
 
     await signIn("credentials", { email, password, redirect: false });
 

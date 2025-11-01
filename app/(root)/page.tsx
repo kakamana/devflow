@@ -66,9 +66,6 @@ interface SearchParams {
 
 const Home = async ({ searchParams }: SearchParams) => {
   //const users = await test();
-  const session = await auth();
-
-  console.log("Session: ", session);
 
   const { query = "", filter = "" } = await searchParams;
 
