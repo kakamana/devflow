@@ -9,7 +9,7 @@ const SignUp = () => {
     <AuthForm
       formType="SIGN_UP"
       schema={SignUpSchema}
-      defaultValues={{ username: "", name: "", email: "", password: "" }}
+      defaultValues={{ name: "", email: "", username: "", password: "" }}
       onSubmit={signUpWithCredentials}
     />
   );
