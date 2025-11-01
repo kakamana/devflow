@@ -1,5 +1,7 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import { z, ZodType } from "zod";
 import {
@@ -21,11 +23,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import ROUTES from "@/constants/routes";
+import { toast, Toaster } from "sonner";
+import { on } from "events";
 
 interface AuthFormProps<T extends FieldValues> {
   schema: ZodType<T>;
   defaultValues: T;
-  onSubmit: (data: T) => Promise<{ success: boolean }>;
+  onSubmit: (data: T) => Promise<ActionResponse>;
   formType: "SIGN_IN" | "SIGN_UP";
 }
 
@@ -35,17 +39,28 @@ const AuthForm = <T extends FieldValues>({
   formType,
   onSubmit,
 }: AuthFormProps<T>) => {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof schema>>({
     resolver: standardSchemaResolver(schema),
     defaultValues: defaultValues as DefaultValues<T>,
   });
 
   const handleSubmit: SubmitHandler<T> = async (data) => {
-    const response = await onSubmit(data);
-    if (response.success) {
+    const response = (await onSubmit(data)) as ActionResponse;
+    if (response?.success) {
       // Handle successful authentication
+      toast.success(
+        formType === "SIGN_IN"
+          ? "Signed in successfully"
+          : "Signed up successfully"
+      );
+      router.push(ROUTES.HOME);
     } else {
       // Handle authentication error
+      toast.error(
+        response?.error?.message || "An error occurred during authentication"
+      );
     }
   };
 
@@ -96,7 +111,7 @@ const AuthForm = <T extends FieldValues>({
 
         {formType === "SIGN_IN" ? (
           <p>
-            Do not have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href={ROUTES.SIGN_UP}
               className="paragraph-semibold primary-text-gradient"
