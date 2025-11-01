@@ -31,7 +31,6 @@ const UserAvatar = ({ id, name, imageUrl, className = "h-9 w-9" }: Props) => {
             className="object-cover"
             width={36}
             height={36}
-            quality={100}
           />
         ) : (
           <AvatarFallback className="primary-gradient font-space-grotesk font-bold tracking-wider text-white">

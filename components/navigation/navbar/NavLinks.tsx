@@ -21,19 +21,21 @@ const NavLinks = ({
   return (
     <>
       {sidebarLinks.map((item) => {
-        const isActive =
-          (pathname.includes(item.route) && item.route.length > 1) ||
-          pathname === item.route;
+        // Never mutate sidebarLinks; compute href dynamically to avoid SSR/CSR mismatch
+        const isProfile = item.route === "/profile";
+        const href = isProfile && userId ? `/profile/${userId}` : item.route;
 
-        if (item.route === "/profile") {
-          if (userId) item.route = `${item.route}/${userId}`;
-          else return null;
-        }
+        // Hide profile link if user not logged in
+        if (isProfile && !userId) return null;
+
+        // Use the computed href for active state comparison
+        const isActive =
+          (href.length > 1 && pathname.startsWith(href)) || pathname === href;
 
         const LinkComponent = (
           <Link
-            href={item.route}
-            key={item.label}
+            href={href}
+            key={`${item.label}-${href}`}
             className={cn(
               isActive
                 ? "primary-gradient rounded-lg text-light-900"
@@ -60,11 +62,13 @@ const NavLinks = ({
         );
 
         return isMobileNav ? (
-          <SheetClose asChild key={item.route}>
+          <SheetClose asChild key={`${item.label}-${href}`}>
             {LinkComponent}
           </SheetClose>
         ) : (
-          <React.Fragment key={item.route}>{LinkComponent}</React.Fragment>
+          <React.Fragment key={`${item.label}-${href}`}>
+            {LinkComponent}
+          </React.Fragment>
         );
       })}
     </>
