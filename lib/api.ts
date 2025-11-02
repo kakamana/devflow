@@ -4,8 +4,24 @@ import { IUser } from "@/database/user.model";
 
 import { fetchHandler } from "./handlers/fetch";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+// Remove trailing slash if present to prevent double slashes in URLs
+// For production, use NEXT_PUBLIC_API_BASE_URL or construct from VERCEL_URL
+const getApiBaseUrl = () => {
+  // If explicitly set, use it
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, "");
+  }
+
+  // For Vercel deployments
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}/api`;
+  }
+
+  // Local development
+  return "http://localhost:3000/api";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const api = {
   auth: {
