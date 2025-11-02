@@ -7,9 +7,11 @@ import { fetchHandler } from "./handlers/fetch";
 // Remove trailing slash if present to prevent double slashes in URLs
 // For production, use NEXT_PUBLIC_API_BASE_URL or construct from VERCEL_URL
 const getApiBaseUrl = () => {
-  // If explicitly set, use it
+  // If explicitly set, use it (remove trailing slash and ensure it ends with /api)
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, "");
+    const url = process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, "");
+    // If it doesn't end with /api, add it
+    return url.endsWith("/api") ? url : `${url}/api`;
   }
 
   // For Vercel deployments

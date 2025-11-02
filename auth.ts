@@ -1,12 +1,14 @@
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
+import slugify from "slugify";
 
-import { IAccountDoc } from "./database/account.model";
-import { IUserDoc } from "./database/user.model";
-import { api } from "./lib/api";
+import Account from "./database/account.model";
+import User from "./database/user.model";
+import dbConnect from "./lib/mongoose";
 import { SignInSchema } from "./lib/validations";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -31,18 +33,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (validatedFields.success) {
           const { email, password } = validatedFields.data;
 
-          const { data: existingAccount } = (await api.accounts.getByProvider(
-            email
-          )) as ActionResponse<IAccountDoc>;
+          await dbConnect();
+
+          // Find account by email (for credentials provider, providerAccountId is email)
+          const existingAccount = await Account.findOne({
+            providerAccountId: email,
+          });
 
           if (!existingAccount) return null;
 
-          const { data: existingUser } = (await api.users.getById(
-            existingAccount.userId.toString()
-          )) as ActionResponse<IUserDoc>;
+          // Find user by ID
+          const existingUser = await User.findById(existingAccount.userId);
 
           if (!existingUser) return null;
 
+          // Verify password
           const isValidPassword = await bcrypt.compare(
             password,
             existingAccount.password!
@@ -50,7 +55,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           if (isValidPassword) {
             return {
-              id: existingUser.id,
+              id: existingUser._id.toString(),
               name: existingUser.name,
               email: existingUser.email,
               image: existingUser.image,
@@ -68,14 +73,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async jwt({ token, account }) {
       if (account) {
-        const { data: existingAccount, success } =
-          (await api.accounts.getByProvider(
+        await dbConnect();
+
+        const existingAccount = await Account.findOne({
+          providerAccountId:
             account.type === "credentials"
               ? token.email!
-              : account.providerAccountId
-          )) as ActionResponse<IAccountDoc>;
+              : account.providerAccountId,
+        });
 
-        if (!success || !existingAccount) return token;
+        if (!existingAccount) return token;
 
         const userId = existingAccount.userId;
 
@@ -88,25 +95,75 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (account?.type === "credentials") return true;
       if (!account || !user) return false;
 
-      const userInfo = {
-        name: user.name!,
-        email: user.email!,
-        image: user.image!,
-        username:
+      await dbConnect();
+
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        const { name, email, image } = user;
+        const username =
           account.provider === "github"
             ? (profile?.login as string)
-            : (user.name?.toLowerCase() as string),
-      };
+            : user.name?.toLowerCase();
 
-      const { success } = (await api.auth.oAuthSignIn({
-        user: userInfo,
-        provider: account.provider as "github" | "google",
-        providerAccountId: account.providerAccountId,
-      })) as ActionResponse;
+        const slugifiedUsername = slugify(username!, {
+          lower: true,
+          strict: true,
+          trim: true,
+        });
 
-      if (!success) return false;
+        let existingUser = await User.findOne({ email }).session(session);
 
-      return true;
+        if (!existingUser) {
+          [existingUser] = await User.create(
+            [{ name, username: slugifiedUsername, email, image }],
+            { session }
+          );
+        } else {
+          const updatedData: { name?: string; image?: string } = {};
+
+          if (name && existingUser.name !== name) updatedData.name = name;
+          if (image && existingUser.image !== image) updatedData.image = image;
+
+          if (Object.keys(updatedData).length > 0) {
+            await User.updateOne(
+              { _id: existingUser._id },
+              { $set: updatedData }
+            ).session(session);
+          }
+        }
+
+        const existingAccount = await Account.findOne({
+          userId: existingUser._id,
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        }).session(session);
+
+        if (!existingAccount) {
+          await Account.create(
+            [
+              {
+                userId: existingUser._id,
+                name,
+                image,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            ],
+            { session }
+          );
+        }
+
+        await session.commitTransaction();
+        return true;
+      } catch (error) {
+        await session.abortTransaction();
+        console.error("OAuth sign-in error:", error);
+        return false;
+      } finally {
+        session.endSession();
+      }
     },
   },
 });
