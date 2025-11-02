@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import React from "react";
 
+import { auth } from "@/auth";
 import AllAnswers from "@/components/answers/AllAnswers";
 import TagCard from "@/components/cards/TagCard";
 import { Preview } from "@/components/editor/Preview";
@@ -16,6 +17,7 @@ import { formatNumber, getTimeStamp } from "@/lib/utils";
 
 const QuestionDetails = async ({ params }: RouteParams) => {
   const { id } = await params;
+  const session = await auth();
   const { success, data: question } = await getQuestion({ questionId: id });
 
   after(async () => {
@@ -112,7 +114,7 @@ const QuestionDetails = async ({ params }: RouteParams) => {
       </section>
 
       <section className="my-5">
-        <AnswerForm questionId={question._id} />
+        <AnswerForm questionId={question._id} isAuthenticated={!!session} />
       </section>
     </>
   );

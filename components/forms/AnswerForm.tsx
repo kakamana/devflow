@@ -25,7 +25,12 @@ const Editor = dynamic(() => import("@/components/editor"), {
   ssr: false,
 });
 
-const AnswerForm = ({ questionId }: { questionId: string }) => {
+interface AnswerFormProps {
+  questionId: string;
+  isAuthenticated: boolean;
+}
+
+const AnswerForm = ({ questionId, isAuthenticated }: AnswerFormProps) => {
   const [isAnswering, startAnsweringTransition] = useTransition();
   const [isAISubmitting, setIsAISubmitting] = useState(false);
 
@@ -63,7 +68,7 @@ const AnswerForm = ({ questionId }: { questionId: string }) => {
         </h4>
         <Button
           className="btn light-border-2 gap-1.5 rounded-md border px-4 py-2.5 text-primary-500 shadow-none dark:text-primary-500"
-          disabled={isAISubmitting}
+          disabled={isAISubmitting || !isAuthenticated}
         >
           {isAISubmitting ? (
             <>
@@ -84,6 +89,11 @@ const AnswerForm = ({ questionId }: { questionId: string }) => {
           )}
         </Button>
       </div>
+      {!isAuthenticated && (
+        <p className="mt-4 text-sm text-dark400_light700">
+          Please sign in to post an answer or generate an AI answer.
+        </p>
+      )}
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleSubmit)}
@@ -107,12 +117,18 @@ const AnswerForm = ({ questionId }: { questionId: string }) => {
           />
 
           <div className="flex justify-end">
-            <Button type="submit" className="primary-gradient w-fit">
+            <Button
+              type="submit"
+              className="primary-gradient w-fit"
+              disabled={isAnswering || !isAuthenticated}
+            >
               {isAnswering ? (
                 <>
                   <ReloadIcon className="mr-2 size-4 animate-spin" />
                   Posting...
                 </>
+              ) : !isAuthenticated ? (
+                "Sign In to Post Answer"
               ) : (
                 "Post Answer"
               )}
