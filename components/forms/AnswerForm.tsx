@@ -79,9 +79,14 @@ const AnswerForm = ({
     }
 
     setIsAISubmitting(true);
+    const userAnswer = editorRef.current?.getMarkdown();
 
     try {
-      const response = await api.ai.getAnswer(questionTitle, questionContent);
+      const response = await api.ai.getAnswer(
+        questionTitle,
+        questionContent,
+        userAnswer
+      );
 
       if (!response.success) {
         toast.error(response.error?.message || "Failed to generate AI answer");
