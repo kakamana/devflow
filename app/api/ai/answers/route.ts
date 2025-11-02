@@ -1,3 +1,4 @@
+import { groq } from "@ai-sdk/groq";
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { NextResponse } from "next/server";
@@ -5,6 +6,31 @@ import { NextResponse } from "next/server";
 import handleError from "@/lib/handlers/error";
 import { ValidationError } from "@/lib/http-errors";
 import { AIAnswerSchema } from "@/lib/validations";
+
+// AI Model Configuration
+// TODO: Move this to admin settings in the future
+const AI_CONFIG = {
+  provider: (process.env.AI_PROVIDER || "groq") as "groq" | "openai",
+  models: {
+    groq: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+    openai: process.env.OPENAI_MODEL || "gpt-4-turbo",
+  },
+};
+
+// Get the appropriate model based on configuration
+function getAIModel() {
+  const { provider, models } = AI_CONFIG;
+
+  switch (provider) {
+    case "groq":
+      return groq(models.groq);
+    case "openai":
+      return openai(models.openai);
+    default:
+      // Fallback to Groq if invalid provider
+      return groq(models.groq);
+  }
+}
 
 export async function POST(req: Request) {
   const { question, content } = await req.json();
@@ -17,7 +43,7 @@ export async function POST(req: Request) {
     }
 
     const { text } = await generateText({
-      model: openai("gpt-4-turbo"),
+      model: getAIModel(),
       prompt: `Generate a markdown-formatted response to the following question: ${question}. Base it on the provided content: ${content}`,
       system:
         "You are a helpful assistant that provides informative responses in markdown format. Use appropriate markdown syntax for headings, lists, code blocks, and emphasis where necessary. For code blocks, use short-form smaller case language identifiers (e.g., 'js' for JavaScript, 'py' for Python, 'ts' for TypeScript, 'html' for HTML, 'css' for CSS, etc.).",
