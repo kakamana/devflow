@@ -1,6 +1,7 @@
 "use server";
 
 import mongoose, { Error, FilterQuery } from "mongoose";
+import { Session } from "next-auth";
 
 import Question, { IQuestionDoc } from "@/database/question.model";
 import TagQuestion from "@/database/tag-question.model";
@@ -31,8 +32,18 @@ export async function createQuestion(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { title, content, tags } = validationResult.params!;
-  const userId = validationResult?.session?.user?.id;
+  const { title, content, tags } = (
+    validationResult as {
+      params: CreateQuestionParams;
+      session: Session | null;
+    }
+  ).params;
+  const userId = (
+    validationResult as {
+      params: CreateQuestionParams;
+      session: Session | null;
+    }
+  ).session?.user?.id;
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -96,8 +107,12 @@ export async function editQuestion(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { title, content, tags, questionId } = validationResult.params!;
-  const userId = validationResult?.session?.user?.id;
+  const { title, content, tags, questionId } = (
+    validationResult as { params: EditQuestionParams; session: Session | null }
+  ).params;
+  const userId = (
+    validationResult as { params: EditQuestionParams; session: Session | null }
+  ).session?.user?.id;
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -203,11 +218,9 @@ export async function getQuestion(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  if (validationResult instanceof Error) {
-    return handleError(validationResult) as ErrorResponse;
-  }
-
-  const { questionId } = validationResult.params!;
+  const { questionId } = (
+    validationResult as { params: GetQuestionParams; session: Session | null }
+  ).params;
 
   try {
     const question = await Question.findById(questionId)
@@ -305,7 +318,12 @@ export async function incrementViews(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { questionId } = validationResult.params!;
+  const { questionId } = (
+    validationResult as {
+      params: IncrementViewsParams;
+      session: Session | null;
+    }
+  ).params;
 
   try {
     const question = await Question.findById(questionId);
