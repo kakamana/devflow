@@ -125,6 +125,7 @@ export const SignInWithOAuthSchema = z.object({
     image: z.string().url("Invalid image URL").optional(),
   }),
 });
+
 export const EditQuestionSchema = AskQuestionSchema.extend({
   questionId: z.string().min(1, { message: "Question ID is required." }),
 });
@@ -132,6 +133,7 @@ export const EditQuestionSchema = AskQuestionSchema.extend({
 export const GetQuestionSchema = z.object({
   questionId: z.string().min(1, { message: "Question ID is required." }),
 });
+
 export const PaginatedSearchParamsSchema = z.object({
   page: z.number().int().positive().default(1),
   pageSize: z.number().int().positive().default(10),
@@ -143,14 +145,21 @@ export const PaginatedSearchParamsSchema = z.object({
 export const GetTagQuestionsSchema = PaginatedSearchParamsSchema.extend({
   tagId: z.string().min(1, { message: "Tag ID is required." }),
 });
+
 export const IncrementViewsSchema = z.object({
   questionId: z.string().min(1, { message: "Question ID is required." }),
 });
+
 export const AnswerSchema = z.object({
   content: z
     .string()
     .min(100, { message: "Answer has to have more than 100 characters." }),
 });
+
 export const AnswerServerSchema = AnswerSchema.extend({
+  questionId: z.string().min(1, { message: "Question ID is required." }),
+});
+
+export const GetAnswersSchema = PaginatedSearchParamsSchema.extend({
   questionId: z.string().min(1, { message: "Question ID is required." }),
 });
