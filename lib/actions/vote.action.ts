@@ -65,7 +65,7 @@ export async function createVote(
   const { targetId, targetType, voteType } = validationResult.params!;
   const userId = validationResult.session?.user?.id;
 
-  if (!userId) handleError(new Error("Unauthorized")) as ErrorResponse;
+  if (!userId) return handleError(new Error("Unauthorized")) as ErrorResponse;
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -92,6 +92,12 @@ export async function createVote(
           { voteType },
           { new: true, session }
         );
+        // Decrement the old vote type count
+        await updateVoteCount(
+          { targetId, targetType, voteType: existingVote.voteType, change: -1 },
+          session
+        );
+        // Increment the new vote type count
         await updateVoteCount(
           { targetId, targetType, voteType, change: 1 },
           session
@@ -120,7 +126,17 @@ export async function createVote(
 
     await session.commitTransaction();
     session.endSession();
-    revalidatePath(ROUTES.QUESTION(targetId));
+
+    // Revalidate the appropriate path based on target type
+    if (targetType === "question") {
+      revalidatePath(ROUTES.QUESTION(targetId));
+    } else {
+      // For answers, we need to get the question ID to revalidate
+      const answer = await Answer.findById(targetId).select("question");
+      if (answer) {
+        revalidatePath(ROUTES.QUESTION(answer.question.toString()));
+      }
+    }
 
     return { success: true };
   } catch (error) {
