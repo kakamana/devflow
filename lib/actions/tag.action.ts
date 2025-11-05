@@ -128,3 +128,23 @@ export const getTagQuestions = async (
     return handleError(error) as ErrorResponse;
   }
 };
+
+export const getTopTags = async (
+  limit: number = 10
+): Promise<ActionResponse<Tag[]>> => {
+  try {
+    // Get top tags by question count
+    const topTags = await Tag.find()
+      .sort({ questions: -1 }) // Sort by number of questions
+      .limit(limit)
+      .select("_id name questions")
+      .lean();
+
+    return {
+      success: true,
+      data: JSON.parse(JSON.stringify(topTags)),
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+};

@@ -119,39 +119,56 @@ export async function getSavedQuestions(
   const skip = (Number(page) - 1) * pageSize;
   const limit = Number(pageSize);
 
-  const filterQuery: FilterQuery<typeof Collection> = { author: userId };
-
-  if (query) {
-    filterQuery.$or = [
-      { title: { $regex: new RegExp(query, "i") } },
-      { content: { $regex: new RegExp(query, "i") } },
-    ];
-  }
-
-  let sortCriteria = {};
-
-  switch (filter) {
-    case "mostrecent":
-      sortCriteria = { createdAt: -1 };
-      break;
-    case "oldest":
-      sortCriteria = { createdAt: -1 };
-      break;
-    case "mostvoted":
-      sortCriteria = { upvotes: -1 };
-      break;
-    case "mostanswered":
-      sortCriteria = { answers: -1 };
-      break;
-    default:
-      sortCriteria = { createdAt: -1 };
-      break;
-  }
-
   try {
-    const totalQuestions = await Question.countDocuments(filterQuery);
+    // Step 1: Build filter query for Collections
+    const collectionFilter: FilterQuery<typeof Collection> = { author: userId };
 
-    const questions = await Collection.find(filterQuery)
+    // Step 2: If there's a search query, first find matching Questions
+    if (query) {
+      const questionFilter: FilterQuery<typeof Question> = {
+        $or: [
+          { title: { $regex: new RegExp(query, "i") } },
+          { content: { $regex: new RegExp(query, "i") } },
+        ],
+      };
+
+      // Find all questions that match the search query
+      const matchingQuestions = await Question.find(questionFilter).select(
+        "_id"
+      );
+      const matchingQuestionIds = matchingQuestions.map((q) => q._id);
+
+      // Add condition to only include collections with these question IDs
+      collectionFilter.question = { $in: matchingQuestionIds };
+    }
+
+    // Step 3: Count total collections matching the filter
+    const totalCollections = await Collection.countDocuments(collectionFilter);
+
+    // Step 4: Set up sort criteria based on filter
+    // Since we need to sort by Question fields, we'll use aggregation
+    let sortCriteria: Record<string, 1 | -1> = {};
+
+    switch (filter) {
+      case "mostrecent":
+        sortCriteria = { "question.createdAt": -1 };
+        break;
+      case "oldest":
+        sortCriteria = { "question.createdAt": 1 };
+        break;
+      case "mostvoted":
+        sortCriteria = { "question.upvotes": -1 };
+        break;
+      case "mostanswered":
+        sortCriteria = { "question.answers": -1 };
+        break;
+      default:
+        sortCriteria = { createdAt: -1 };
+        break;
+    }
+
+    // Step 5: Fetch collections with populated question data
+    const collections = await Collection.find(collectionFilter)
       .populate({
         path: "question",
         populate: [
@@ -163,11 +180,11 @@ export async function getSavedQuestions(
       .skip(skip)
       .limit(limit);
 
-    const isNext = totalQuestions > skip + questions.length;
+    const isNext = totalCollections > skip + collections.length;
 
     return {
       success: true,
-      data: { collection: JSON.parse(JSON.stringify(questions)), isNext },
+      data: { collection: JSON.parse(JSON.stringify(collections)), isNext },
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;

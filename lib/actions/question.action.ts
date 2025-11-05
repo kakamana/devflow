@@ -268,20 +268,47 @@ export async function getQuestions(
 
   let sortCriteria = {};
 
-  switch (filter) {
-    case "newest":
-      sortCriteria = { createdAt: -1 };
-      break;
-    case "unanswered":
-      filterQuery.answers = 0;
-      sortCriteria = { createdAt: -1 };
-      break;
-    case "popular":
-      sortCriteria = { upvotes: -1 };
-      break;
-    default:
-      sortCriteria = { createdAt: -1 };
-      break;
+  // Check if filter is a sort option or a tag name
+  const sortOptions = ["newest", "unanswered", "popular"];
+  const isTagFilter = filter && !sortOptions.includes(filter);
+
+  // If filter is a tag name, filter questions by that tag
+  if (isTagFilter) {
+    try {
+      // Find the tag by name (case-insensitive)
+      const tag = await Tag.findOne({
+        name: { $regex: new RegExp(`^${filter}$`, "i") },
+      });
+
+      if (tag) {
+        // Filter questions that have this tag
+        filterQuery.tags = tag._id;
+      } else {
+        // If tag doesn't exist, return empty results
+        return { success: true, data: { questions: [], isNext: false } };
+      }
+    } catch (error) {
+      return handleError(error) as ErrorResponse;
+    }
+    // Default sort by newest for tag filters
+    sortCriteria = { createdAt: -1 };
+  } else {
+    // Handle sort options
+    switch (filter) {
+      case "newest":
+        sortCriteria = { createdAt: -1 };
+        break;
+      case "unanswered":
+        filterQuery.answers = 0;
+        sortCriteria = { createdAt: -1 };
+        break;
+      case "popular":
+        sortCriteria = { upvotes: -1 };
+        break;
+      default:
+        sortCriteria = { createdAt: -1 };
+        break;
+    }
   }
 
   try {

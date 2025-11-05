@@ -6,6 +6,7 @@ import LocalSearch from "@/components/search/LocalSearch";
 import { Button } from "@/components/ui/button";
 import ROUTES from "@/constants/routes";
 import { getQuestions } from "@/lib/actions/question.action";
+import { getTopTags } from "@/lib/actions/tag.action";
 import DataRenderer from "@/components/DataRenderer";
 import { EMPTY_QUESTION } from "@/constants/states";
 
@@ -16,14 +17,19 @@ interface SearchParams {
 const Home = async ({ searchParams }: SearchParams) => {
   const { page, pageSize, query, filter } = await searchParams;
 
-  const { success, data, error } = await getQuestions({
-    page: Number(page) || 1,
-    pageSize: Number(pageSize) || 10,
-    query: query || "",
-    filter: filter || "",
-  });
+  const [questionsResult, tagsResult] = await Promise.all([
+    getQuestions({
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 10,
+      query: query || "",
+      filter: filter || "",
+    }),
+    getTopTags(5), // Get top 5 tags
+  ]);
 
+  const { success, data, error } = questionsResult;
   const { questions } = data || {};
+  const topTags = tagsResult.success ? tagsResult.data : [];
 
   return (
     <>
@@ -45,7 +51,7 @@ const Home = async ({ searchParams }: SearchParams) => {
           otherClasses="flex-1"
         />
       </section>
-      <HomeFilter />
+      <HomeFilter topTags={topTags} />
 
       <DataRenderer
         success={success}
