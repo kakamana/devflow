@@ -1,3 +1,30 @@
+type ActionResponse<T = null> = {
+  success: boolean;
+  data?: T;
+  error?: {
+    message: string;
+    details?: Record<string, string[]>;
+  };
+  status?: number;
+};
+
+type SuccessResponse<T = null> = ActionResponse<T> & { success: true };
+type ErrorResponse = ActionResponse<undefined> & { success: false };
+
+type APIErrorResponse = NextResponse<ErrorResponse>;
+type APIResponse<T = null> = NextResponse<SuccessResponse<T> | ErrorResponse>;
+
+interface UrlQueryParams {
+  params: string;
+  key: string;
+  value: string | null;
+}
+
+interface RemoveUrlQueryParams {
+  params: string;
+  keysToRemove: string[];
+}
+
 interface Tag {
   _id: string;
   name: string;
@@ -21,24 +48,17 @@ interface Question {
   downvotes: number;
   answers: number;
   views: number;
-  createdAt: Date;
 }
 
-type ActionResponse<T = null> = {
-  success: boolean;
-  data?: T;
-  error?: {
-    message: string;
-    details?: Record<string, string[]>;
-  };
-  status?: number;
-};
-
-type SuccessResponse<T = null> = ActionResponse<T> & { success: true };
-type ErrorResponse = ActionResponse<undefined> & { success: false };
-
-type APIErrorResponse = NextResponse<ErrorResponse>;
-type APIResponse<T = null> = NextResponse<SuccessResponse<T> | ErrorResponse>;
+interface Answer {
+  _id: string;
+  author: Author;
+  content: string;
+  upvotes: number;
+  question: string;
+  downvotes: number;
+  createdAt: Date;
+}
 
 interface RouteParams {
   params: Promise<Record<string, string>>;
@@ -53,15 +73,12 @@ interface PaginatedSearchParams {
   sort?: string;
 }
 
-interface Answer {
+interface Collection {
   _id: string;
-  author: Author;
-  content: string;
-  createdAt: Date;
-  upvotes: number;
-  downvotes: number;
-  question: string;
+  author: string | Author;
+  question: Question;
 }
+
 interface User {
   _id: string;
   name: string;
@@ -74,12 +91,8 @@ interface User {
   reputation?: number;
   createdAt: Date;
 }
-interface Collection {
-  _id: string;
-  author: string | Author;
-  question: Question;
-}
-interface BadgeCounts {
+
+interface Badges {
   GOLD: number;
   SILVER: number;
   BRONZE: number;
