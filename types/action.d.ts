@@ -39,6 +39,7 @@ interface IncrementViewsParams {
 interface CreateAnswerParams {
   questionId: string;
   content: string;
+  questionId: string;
 }
 interface GetAnswersParams extends PaginatedSearchParams {
   questionId: string;
@@ -65,7 +66,7 @@ interface GetUserParams {
   userId: string;
 }
 interface GetUserQuestionsParams
-  extends Omit<PaginatedSearchParams, "query" | "filter" | "sort"> {
+  extends Omit<PaginatedSearchParams, "query | filter | sort"> {
   userId: string;
 }
 interface GetUserAnswersParams extends PaginatedSearchParams {
@@ -79,4 +80,25 @@ interface DeleteQuestionParams {
 }
 interface DeleteAnswerParams {
   answerId: string;
+}
+interface CreateInteractionParams {
+  action:
+    | "view"
+    | "upvote"
+    | "downvote"
+    | "bookmark"
+    | "post"
+    | "edit"
+    | "delete"
+    | "search";
+  actionId: string;
+  authorId: string;
+  actionTarget: "question" | "answer";
+}
+
+interface UpdateReputationParams {
+  interaction: IInteractionDoc;
+  session: mongoose.ClientSession;
+  performerId: string;
+  authorId: string;
 }
