@@ -2,6 +2,12 @@ import Image from "next/image";
 
 import { formatNumber } from "@/lib/utils";
 
+interface BadgeCounts {
+  GOLD: number;
+  SILVER: number;
+  BRONZE: number;
+}
+
 interface StatsCardProps {
   imgUrl: string;
   value: number;
