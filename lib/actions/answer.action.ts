@@ -2,18 +2,20 @@
 
 import mongoose from "mongoose";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 
 import ROUTES from "@/constants/routes";
 import { Question, Vote } from "@/database";
 import Answer, { IAnswerDoc } from "@/database/answer.model";
 
-import action from "@/lib/handlers/action";
-import handleError from "@/lib/handlers/error";
+import action from "../handlers/action";
+import handleError from "../handlers/error";
 import {
   AnswerServerSchema,
   DeleteAnswerSchema,
   GetAnswersSchema,
-} from "@/lib/validations";
+} from "../validations";
+import { createInteraction } from "./interaction.action";
 
 export async function createAnswer(
   params: CreateAnswerParams
@@ -29,14 +31,14 @@ export async function createAnswer(
   }
 
   const { content, questionId } = validationResult.params!;
-  const userId = validationResult?.session?.user?.id;
+  const userId = validationResult.session?.user?.id;
 
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
+    // check if the question exists
     const question = await Question.findById(questionId);
-
     if (!question) throw new Error("Question not found");
 
     const [newAnswer] = await Answer.create(
@@ -50,19 +52,27 @@ export async function createAnswer(
       { session }
     );
 
-    if (!newAnswer) throw new Error("Failed to create answer");
+    if (!newAnswer) throw new Error("Failed to create the answer");
 
+    // update the question answers count
     question.answers += 1;
     await question.save({ session });
+
+    // log the interaction
+    after(async () => {
+      await createInteraction({
+        action: "post",
+        actionId: newAnswer._id.toString(),
+        actionTarget: "answer",
+        authorId: userId as string,
+      });
+    });
 
     await session.commitTransaction();
 
     revalidatePath(ROUTES.QUESTION(questionId));
 
-    return {
-      success: true,
-      data: JSON.parse(JSON.stringify(newAnswer)),
-    };
+    return { success: true, data: JSON.parse(JSON.stringify(newAnswer)) };
   } catch (error) {
     await session.abortTransaction();
     return handleError(error) as ErrorResponse;
@@ -132,6 +142,7 @@ export async function getAnswers(params: GetAnswersParams): Promise<
     return handleError(error) as ErrorResponse;
   }
 }
+
 export async function deleteAnswer(
   params: DeleteAnswerParams
 ): Promise<ActionResponse> {
@@ -168,9 +179,17 @@ export async function deleteAnswer(
     // delete the answer
     await Answer.findByIdAndDelete(answerId);
 
-    // revalidate both profile and question pages
+    // log the interaction
+    after(async () => {
+      await createInteraction({
+        action: "delete",
+        actionId: answerId,
+        actionTarget: "answer",
+        authorId: user?.id as string,
+      });
+    });
+
     revalidatePath(`/profile/${user?.id}`);
-    revalidatePath(ROUTES.QUESTION(answer.question.toString()));
 
     return { success: true };
   } catch (error) {
