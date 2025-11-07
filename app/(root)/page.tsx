@@ -27,7 +27,7 @@ const Home = async ({ searchParams }: SearchParams) => {
       query: query || "",
       filter: filter || "",
     }),
-    getTopTags(5), // Get top 5 tags
+    getTopTags(), // Get top tags
   ]);
 
   const { success, data, error } = questionsResult;
