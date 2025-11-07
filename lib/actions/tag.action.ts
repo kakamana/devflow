@@ -6,6 +6,7 @@ import {
   PaginatedSearchParamsSchema,
 } from "../validations";
 import { Question, Tag } from "@/database";
+import dbConnect from "../mongoose";
 
 export const getTags = async (
   params: PaginatedSearchParams
@@ -129,20 +130,34 @@ export const getTagQuestions = async (
   }
 };
 
-export const getTopTags = async (
-  limit: number = 10
-): Promise<ActionResponse<Tag[]>> => {
+// export const getTopTags = async (
+//   limit: number = 10
+// ): Promise<ActionResponse<Tag[]>> => {
+//   try {
+//     // Get top tags by question count
+//     const topTags = await Tag.find()
+//       .sort({ questions: -1 }) // Sort by number of questions
+//       .limit(limit)
+//       .select("_id name questions")
+//       .lean();
+
+//     return {
+//       success: true,
+//       data: JSON.parse(JSON.stringify(topTags)),
+//     };
+//   } catch (error) {
+//     return handleError(error) as ErrorResponse;
+//   }
+// };
+export const getTopTags = async (): Promise<ActionResponse<Tag[]>> => {
   try {
-    // Get top tags by question count
-    const topTags = await Tag.find()
-      .sort({ questions: -1 }) // Sort by number of questions
-      .limit(limit)
-      .select("_id name questions")
-      .lean();
+    await dbConnect();
+
+    const tags = await Tag.find().sort({ questions: -1 }).limit(5);
 
     return {
       success: true,
-      data: JSON.parse(JSON.stringify(topTags)),
+      data: JSON.parse(JSON.stringify(tags)),
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;
