@@ -159,7 +159,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         return true;
       } catch (error) {
         await session.abortTransaction();
-        console.error("OAuth sign-in error:", error);
+        // console.error("OAuth sign-in error:", error);
         return false;
       } finally {
         session.endSession();

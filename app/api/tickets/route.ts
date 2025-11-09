@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   };
   tickets.push(newTicket);
 
-  console.log(newTicket);
+  // console.log(newTicket);
 
   return NextResponse.json(newTicket);
 }
