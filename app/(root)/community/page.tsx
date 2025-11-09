@@ -10,6 +10,7 @@ import { getUsers } from "@/lib/actions/user.action";
 
 const Community = async ({ searchParams }: RouteParams) => {
   const { page, pageSize, query, filter } = await searchParams;
+  //throw new Error("Error");
 
   const { success, data, error } = await getUsers({
     page: Number(page) || 1,

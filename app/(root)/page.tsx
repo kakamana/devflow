@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Metadata } from "next";
 
 import QuestionCard from "@/components/cards/QuestionCard";
 import HomeFilter from "@/components/filters/HomeFilter";
@@ -13,19 +14,23 @@ import CommonFilter from "@/components/filters/CommonFilter";
 import { HomePageFilters } from "@/constants/filters";
 import { EMPTY_QUESTION } from "@/constants/states";
 
-interface SearchParams {
-  searchParams: Promise<{ [key: string]: string }>;
-}
+export const metadata: Metadata = {
+  title: "Dev Overflow | Home",
+  description:
+    "Discover different programming questions and answers with recommendations from the community.",
+};
 
-const Home = async ({ searchParams }: SearchParams) => {
+async function Home({ searchParams }: RouteParams) {
   const { page, pageSize, query, filter } = await searchParams;
 
   const [questionsResult, tagsResult] = await Promise.all([
     getQuestions({
       page: Number(page) || 1,
       pageSize: Number(pageSize) || 10,
-      query: query || "",
-      filter: filter || "",
+      //query: query || "",
+      //filter: filter || "",
+      query,
+      filter,
     }),
     getTopTags(), // Get top tags
   ]);
@@ -43,14 +48,17 @@ const Home = async ({ searchParams }: SearchParams) => {
           className="primary-gradient min-h-[46px] px-4 py-3 !text-light-900"
           asChild
         >
-          <Link href={ROUTES.ASK_QUESTION}>Ask a Question</Link>
+          <Link href={ROUTES.ASK_QUESTION} className="max-sm:w-full">
+            Ask a Question
+          </Link>
         </Button>
       </section>
       <section className="mt-11 flex justify-between gap-5 max-sm:flex-col sm:items-center">
         <LocalSearch
-          route="/"
+          route={ROUTES.HOME}
           imgSrc="/icons/search.svg"
           placeholder="Search questions..."
+          iconPosition="left"
           otherClasses="flex-1"
         />
         <CommonFilter
@@ -59,7 +67,7 @@ const Home = async ({ searchParams }: SearchParams) => {
           containerClasses="hidden max-md:flex"
         />
       </section>
-      <HomeFilter topTags={topTags} />
+      <HomeFilter />
 
       <DataRenderer
         success={success}
@@ -77,6 +85,6 @@ const Home = async ({ searchParams }: SearchParams) => {
       <Pagination page={page} isNext={isNext || false} />
     </>
   );
-};
+}
 
 export default Home;
