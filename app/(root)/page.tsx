@@ -84,6 +84,30 @@ export const metadata = {
     TileColor: "#ffffff",
     TileImage: "/mstile-150x150.png",
   },
+  openGraph: {
+    title: "Dev Overflow | Ask & Answer Programming Questions",
+    description:
+      "Explore coding topics with help from the global dev community.",
+    url: "https://devflow-three-nu.vercel.app",
+    siteName: "Dev Overflow",
+    images: [
+      {
+        url: "/images/og-banner.png",
+        width: 1200,
+        height: 630,
+        alt: "Dev Overflow OG Banner",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dev Overflow on Twitter",
+    description: "Get dev answers fast. Join the community.",
+    images: ["/images/twitter-banner.png"],
+    creator: "@kakamana",
+  },
 };
 
 async function Home({ searchParams }: RouteParams) {
