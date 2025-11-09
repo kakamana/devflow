@@ -228,3 +228,45 @@ export const GlobalSearchSchema = z.object({
   query: z.string(),
   type: z.string().nullable().optional(),
 });
+export const ProfileSchema = z.object({
+  name: z
+    .string()
+    .min(3, {
+      message: "Name must be at least 3 characters.",
+    })
+    .max(130, { message: "Name mustn't be longer than 130 characters." }),
+  username: z
+    .string()
+    .min(2, { message: "Username must be at least 2 characters." })
+    .max(100, {
+      message: "Username mustn't be longer than 100 characters.",
+    }),
+  portfolio: z
+    .string()
+    .url({ message: "Please provide a valid URL." })
+    .optional()
+    .or(z.literal("")),
+  location: z.string().min(2, {
+    message: "Please provide a proper location (at least 2 characters).",
+  }),
+  bio: z.string().min(3, {
+    message: "Bio must be at least 3 characters.",
+  }),
+});
+
+export const UpdateUserSchema = z.object({
+  name: z
+    .string()
+    .min(3, {
+      message: "Name must be at least 3 characters.",
+    })
+    .max(130, { message: "Name musn't be longer then 130 characters." }),
+  username: z
+    .string()
+    .min(3, { message: "username musn't be longer then 100 characters." }),
+  portfolio: z.string().url({ message: "Please provide valid URL" }),
+  location: z.string().min(3, { message: "Please provide proper location" }),
+  bio: z.string().min(3, {
+    message: "Bio must be at least 3 characters.",
+  }),
+});
