@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { formUrlQuery, removeKeysFromUrlQuery } from "@/lib/url";
 
@@ -28,15 +28,21 @@ const LocalSearch = ({
   const searchParams = useSearchParams();
   const query = searchParams.get("query") || "";
 
-  const [searchQuery, setSearchQuery] = useState(query);
+  const [search, setSearch] = useState(query || "");
+  const previousSearchRef = useRef(search);
 
   useEffect(() => {
+    // Only trigger if search actually changed
+    if (previousSearchRef.current === search) return;
+
+    previousSearchRef.current = search;
+
     const delayDebounceFn = setTimeout(() => {
-      if (searchQuery) {
+      if (search) {
         const newUrl = formUrlQuery({
           params: searchParams.toString(),
           key: "query",
-          value: searchQuery,
+          value: search,
         });
 
         router.push(newUrl, { scroll: false });
@@ -53,7 +59,7 @@ const LocalSearch = ({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, router, route, searchParams, pathname]);
+  }, [search, router, route, searchParams, pathname]);
 
   return (
     <div
@@ -72,8 +78,8 @@ const LocalSearch = ({
       <Input
         type="text"
         placeholder={placeholder}
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
         className="paragraph-regular no-focus placeholder text-dark400_light700 border-none shadow-none outline-none"
       />
 
