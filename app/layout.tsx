@@ -1,12 +1,12 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { SessionProvider } from "next-auth/react";
-import { ReactNode } from "react";
-
-import "./globals.css";
-
 import { ThemeProvider } from "next-themes";
+import { ReactNode } from "react";
+import "./globals.css";
 import { Toaster } from "sonner";
+
 import { auth } from "@/auth";
 
 const inter = localFont({
@@ -55,6 +55,7 @@ const RootLayout = async ({ children }: { children: ReactNode }) => {
             {children}
           </ThemeProvider>
           <Toaster />
+          <SpeedInsights />
         </body>
       </SessionProvider>
     </html>
