@@ -1,8 +1,11 @@
+"use client";
+
 import { LogOut } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-import { auth, signOut } from "@/auth";
+import { handleSignOut } from "@/lib/actions/auth.action";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -15,9 +18,28 @@ import ROUTES from "@/constants/routes";
 
 import NavLinks from "./NavLinks";
 
-const MobileNavigation = async () => {
-  const session = await auth();
-  const userId = session?.user?.id;
+interface Props {
+  userId?: string;
+}
+
+const MobileNavigation = ({ userId }: Props) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <Image
+        src="/icons/hamburger.svg"
+        width={36}
+        height={36}
+        alt="Menu"
+        className="invert-colors sm:hidden"
+      />
+    );
+  }
 
   return (
     <Sheet>
@@ -57,23 +79,15 @@ const MobileNavigation = async () => {
 
           <div className="flex flex-col gap-3">
             {userId ? (
-              <SheetClose asChild>
-                <form
-                  action={async () => {
-                    "use server";
-
-                    await signOut();
-                  }}
+              <form action={handleSignOut}>
+                <Button
+                  type="submit"
+                  className="base-medium w-fit !bg-transparent px-4 py-3"
                 >
-                  <Button
-                    type="submit"
-                    className="base-medium w-fit !bg-transparent px-4 py-3"
-                  >
-                    <LogOut className="size-5 text-black dark:text-white" />
-                    <span className="text-dark300_light900">Logout</span>
-                  </Button>
-                </form>
-              </SheetClose>
+                  <LogOut className="size-5 text-black dark:text-white" />
+                  <span className="text-dark300_light900">Logout</span>
+                </Button>
+              </form>
             ) : (
               <>
                 <SheetClose asChild>

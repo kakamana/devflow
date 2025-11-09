@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
@@ -23,6 +24,11 @@ const JobsFilter = ({ countriesList }: JobsFilterProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleUpdateParams = (value: string) => {
     const newUrl = formUrlQuery({
@@ -33,6 +39,29 @@ const JobsFilter = ({ countriesList }: JobsFilterProps) => {
 
     router.push(newUrl, { scroll: false });
   };
+
+  if (!mounted) {
+    return (
+      <div className="relative mt-11 flex w-full justify-between gap-5 max-sm:flex-col sm:items-center">
+        <LocalSearch
+          route={pathname}
+          iconPosition="left"
+          imgSrc="/icons/job-search.svg"
+          placeholder="Job Title, Company, or Keywords"
+          otherClasses="flex-1 max-sm:w-full"
+        />
+        <div className="body-regular light-border background-light800_dark300 text-dark500_light700 line-clamp-1 flex min-h-[56px] items-center gap-3 border p-4 sm:max-w-[210px] rounded-md">
+          <Image
+            src="/icons/carbon-location.svg"
+            alt="location"
+            width={18}
+            height={18}
+          />
+          <span>Select Location</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative mt-11 flex w-full justify-between gap-5 max-sm:flex-col sm:items-center">

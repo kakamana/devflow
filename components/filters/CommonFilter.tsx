@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -31,8 +32,13 @@ const CommonFilter = ({
 }: Props) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [mounted, setMounted] = useState(false);
 
   const paramsFilter = searchParams.get("filter");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleUpdateParams = (value: string) => {
     const newUrl = formUrlQuery({
@@ -43,6 +49,21 @@ const CommonFilter = ({
 
     router.push(newUrl, { scroll: false });
   };
+
+  if (!mounted) {
+    return (
+      <div className={cn("relative", containerClasses)}>
+        <div
+          className={cn(
+            "body-regular light-border background-light800_dark300 text-dark500_light700 border px-5 py-2.5 rounded-md",
+            otherClasses
+          )}
+        >
+          <span className="text-dark500_light700">Select a filter</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative", containerClasses)}>

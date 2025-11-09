@@ -112,3 +112,7 @@ interface JobFilterParams {
   query: string;
   page: string;
 }
+interface GlobalSearchParams {
+  query: string;
+  type: string | null;
+}

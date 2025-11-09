@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import Account from "@/database/account.model";
 import User from "@/database/user.model";
 
@@ -11,6 +11,10 @@ import action from "../handlers/action";
 import handleError from "../handlers/error";
 import { NotFoundError } from "../http-errors";
 import { SignInSchema, SignUpSchema } from "../validations";
+
+export async function handleSignOut() {
+  await signOut();
+}
 
 export async function signUpWithCredentials(
   params: AuthCredentials
